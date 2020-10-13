@@ -32,11 +32,35 @@ We are learning about sampling this week. We are taking the theory of Chapter 5 
 
 **Prompt:** Without using rep_sample_n(), sample 30 beads at random from the urn five times. The resulting tibble should have two columns: `replicate` (with a value of 1 to 5) and `samp` (a list column in which each item is a tibble with 30 rows sampled, with replacement, from `urn`). Each tibble in `samp` will have the same two columns as `urn`. Hint: `sample_n()` is a very handy function. It will sample a random selection of rows from a tibble which you pass it. Also, use `str()` and `view()` interactively to confirm that your oject looks the way you want.
 
+```{r q1}
+
+# urn
+# samp <- sample_n(urn, size = 30, replace = TRUE)
+# tib <- tibble(replicate = c(rep(1:5), 6), 
+#       samp = samp)
+
+# View(urn)
+
+View(tibble(replicate = c(rep(1:5)), 
+     samp = map(replicate, ~ sample_n(urn, size = 30, replace = TRUE))))
+
+```
 
 ## Scene 2
 
 **Prompt:** What is the probability that, if you sample 50 beads at random, there will be more red than blue beads in the sample?
 
+```{r q2}
+
+tib <- tibble(replicate = 1:1000) %>%
+  mutate(samp = map(replicate, ~ sample_n(urn, size = 50, replace = TRUE))) %>%
+  mutate(num_red = map_int(samp, ~ sum(.x$color == "red"))) %>%
+  mutate(red_percent = num_red/50 * 100) %>%
+  summarize(prob = sum(red_percent > 50)/10)
+
+tib
+
+```
 
 
 ## Scene 3
@@ -53,3 +77,15 @@ Let's follow that same intuition in the case of the urn. We have an urn with 1,0
 
 * Still using a tibble with those 7 rows, call `rbinom()` with `n = 10`. (This may require other changes in your code.) Turn the resulting tibble, in which `numb_red_paddle` is a list column into an easier-to-work-with tibble in which `numb_red_paddle` is an integer. Hint: `unnest()`. Interpret the resulting object.
 
+```{r q3}
+rbinom(n = 10, size = 25, prob = 0.4)
+
+tibble(numb_red_urn = seq(from = 100, to = 700, by = 100),
+  numb_red_paddle = map(numb_red_urn, ~ (rbinom(n = 10, size = 25, prob = 0.4)))) %>%
+  unnest() %>%
+  group_by(numb_red_urn) %>%
+  pivot_wider(names_from = numb_red_urn, values_from = numb_red_paddle) %>% 
+  unnest() 
+  
+
+```
